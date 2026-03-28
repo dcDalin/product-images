@@ -11,8 +11,8 @@ import { z } from "zod";
  */
 export const workflowStateSchema = z.object({
   // Progress tracking
-  progressLog: z.array(z.string()).describe("Log of progress messages from each step"),
-  currentStep: z.string().describe("Name of the currently executing step"),
+  progressLog: z.array(z.string()).default([]).describe("Log of progress messages from each step"),
+  currentStep: z.string().default("initialization").describe("Name of the currently executing step"),
 
   // Template selection metadata
   selectedTemplateIds: z.array(z.number()).optional().describe("Template IDs selected for generation"),
@@ -23,14 +23,14 @@ export const workflowStateSchema = z.object({
   totalAssets: z.object({
     logoCount: z.number().default(0),
     productImageCount: z.number().default(0),
-  }).describe("Count of processed assets"),
+  }).default({ logoCount: 0, productImageCount: 0 }).describe("Count of processed assets"),
 
   // Warnings and issues
   warnings: z.array(z.object({
     step: z.string(),
     message: z.string(),
     timestamp: z.string(),
-  })).describe("Non-fatal warnings encountered during execution"),
+  })).default([]).describe("Non-fatal warnings encountered during execution"),
 
   // Performance timings
   timings: z.object({
@@ -40,22 +40,7 @@ export const workflowStateSchema = z.object({
     customizePrompts: z.number().optional(),
     generateImages: z.number().optional(),
     saveCreatives: z.number().optional(),
-  }).describe("Time spent in milliseconds for each step"),
+  }).default({}).describe("Time spent in milliseconds for each step"),
 });
 
 export type WorkflowState = z.infer<typeof workflowStateSchema>;
-
-/**
- * Helper to create initial state for the workflow
- */
-export const createInitialState = (): WorkflowState => ({
-  progressLog: [],
-  currentStep: "initialization",
-  totalCreativesGenerated: 0,
-  totalAssets: {
-    logoCount: 0,
-    productImageCount: 0,
-  },
-  warnings: [],
-  timings: {},
-});

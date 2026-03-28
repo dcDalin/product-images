@@ -1,27 +1,14 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Type definitions for Ad Creative Generation Workflow
  */
 
-// Image input can be: file path, base64 data, or URL
-export const imageInputSchema = z.union([
-  z.object({
-    type: z.literal('path'),
-    value: z.string().describe('File path (e.g., "src/mastra/assets/TestAssets/logo.png")'),
-  }),
-  z.object({
-    type: z.literal('base64'),
-    value: z.string().describe('Base64 encoded image data'),
-    filename: z.string().optional().describe('Original filename for reference'),
-  }),
-  z.object({
-    type: z.literal('url'),
-    value: z.string().url().describe('URL to image'),
-  }),
-  // Simplified: just a string (treated as file path for backwards compatibility)
-  z.string(),
-]);
+// Image input must be a publicly accessible URL
+export const imageInputSchema = z
+  .string()
+  .url()
+  .describe('Publicly accessible image URL (e.g., "https://example.com/logo.png")');
 
 export type ImageInput = z.infer<typeof imageInputSchema>;
 
@@ -37,32 +24,35 @@ export const generateAdCreativesInputSchema = z.object({
   productDescription: z
     .string()
     .min(10)
-    .max(1000)
-    .describe('Detailed product description highlighting key features and benefits'),
+    .max(10000)
+    .describe(
+      "Detailed product description highlighting key features and benefits",
+    ),
 
   targetAudience: z
     .string()
     .optional()
-    .describe('Target demographic (e.g., "fitness enthusiasts 25-40"). Leave empty for AI to determine.'),
+    .describe(
+      'Target demographic (e.g., "fitness enthusiasts 25-40"). Leave empty for AI to determine.',
+    ),
 
   brandTone: z
-    .enum(['professional', 'playful', 'luxury', 'minimal', 'bold', 'friendly'])
+    .enum(["professional", "playful", "luxury", "minimal", "bold", "friendly"])
     .optional()
-    .describe('Brand personality. Leave empty for AI to determine.'),
+    .describe("Brand personality. Leave empty for AI to determine."),
 
-  // ========== ASSETS (Flexible inputs) ==========
+  // ========== ASSETS (URL inputs) ==========
   logo: imageInputSchema.describe(
-    'Brand logo. Can be:\n' +
-    '• File path: "src/mastra/assets/TestAssets/logos/logo.png"\n' +
-    '• Object with base64: { type: "base64", value: "data:image/png;base64,..." }\n' +
-    '• Object with URL: { type: "url", value: "https://..." }'
+    'Brand logo as publicly accessible URL (e.g., "https://cdn.example.com/logo.png")',
   ),
 
   productImages: z
     .array(imageInputSchema)
     .min(1)
     .max(10)
-    .describe('Product images (1-10). Same format as logo field.'),
+    .describe(
+      'Product images (1-10) as publicly accessible URLs (e.g., ["https://cdn.example.com/product1.jpg", "https://cdn.example.com/product2.jpg"])',
+    ),
 
   // ========== BRAND COLORS ==========
   brandColors: z
@@ -75,26 +65,32 @@ export const generateAdCreativesInputSchema = z.object({
         .string()
         .regex(/^#[0-9A-Fa-f]{6}$/)
         .optional()
-        .describe('Secondary brand color (optional)'),
+        .describe("Secondary brand color (optional)"),
       accent: z
         .string()
         .regex(/^#[0-9A-Fa-f]{6}$/)
         .optional()
-        .describe('Accent color (optional)'),
+        .describe("Accent color (optional)"),
     })
     .optional()
-    .describe('Brand color palette. Leave empty for AI to extract from logo/images.'),
+    .describe(
+      "Brand color palette. Leave empty for AI to extract from logo/images.",
+    ),
 
   // ========== TEMPLATE SELECTION ==========
   templateSelectionMode: z
-    .enum(['manual', 'ai'])
-    .default('ai')
-    .describe('How to choose templates: "manual" = you specify IDs, "ai" = AI recommends best fit'),
+    .enum(["manual", "ai"])
+    .default("ai")
+    .describe(
+      'How to choose templates: "manual" = you specify IDs, "ai" = AI recommends best fit',
+    ),
 
   templateIds: z
     .array(z.number().int().min(1).max(40))
     .optional()
-    .describe('Template IDs (1-40). Example: [1, 11, 21]. Required if mode is "manual".'),
+    .describe(
+      'Template IDs (1-40). Example: [1, 11, 21]. Required if mode is "manual".',
+    ),
 
   aiSelectTemplateCount: z
     .number()
@@ -102,7 +98,7 @@ export const generateAdCreativesInputSchema = z.object({
     .min(1)
     .max(20)
     .default(5)
-    .describe('If AI selecting, how many templates? (1-20, default: 5)'),
+    .describe("If AI selecting, how many templates? (1-20, default: 5)"),
 
   // ========== GENERATION CONFIG ==========
   creativesPerTemplate: z
@@ -111,37 +107,41 @@ export const generateAdCreativesInputSchema = z.object({
     .min(1)
     .max(10)
     .default(1)
-    .describe('Variations per template (1-10, default: 1)'),
+    .describe("Variations per template (1-10, default: 1)"),
 
   // ========== ADVANCED OPTIONS ==========
   imageGenerationModel: z
     .string()
     .optional()
-    .describe('Image generation model (e.g., "nano-gpt/gpt-5-pro"). Leave empty for default.'),
+    .describe(
+      'Image generation model (e.g., "nano-gpt/gpt-5-pro"). Leave empty for default.',
+    ),
 
   outputDirectory: z
     .string()
     .optional()
-    .describe('Custom output directory (optional)'),
+    .describe("Custom output directory (optional)"),
 });
 
-export type GenerateAdCreativesInput = z.infer<typeof generateAdCreativesInputSchema>;
+export type GenerateAdCreativesInput = z.infer<
+  typeof generateAdCreativesInputSchema
+>;
 
 // Product analysis output
 export const productAnalysisSchema = z.object({
-  keyFeatures: z.array(z.string()).describe('Key product features'),
-  targetAudience: z.string().describe('Identified target audience'),
-  brandTone: z.string().describe('Brand personality'),
-  visualStyle: z.string().describe('Visual style description'),
-  keyMessages: z.array(z.string()).describe('Core messaging'),
+  keyFeatures: z.array(z.string()).describe("Key product features"),
+  targetAudience: z.string().describe("Identified target audience"),
+  brandTone: z.string().describe("Brand personality"),
+  visualStyle: z.string().describe("Visual style description"),
+  keyMessages: z.array(z.string()).describe("Core messaging"),
 
   recommendedTemplates: z.array(
     z.object({
       templateId: z.number(),
       templateName: z.string(),
       reasoning: z.string(),
-      priority: z.enum(['high', 'medium', 'low']),
-    })
+      priority: z.enum(["high", "medium", "low"]),
+    }),
   ),
 
   brandAttributes: z.object({
@@ -158,7 +158,7 @@ export const generationTaskSchema = z.object({
   templateId: z.number(),
   templateName: z.string(),
   variationNumber: z.number(),
-  aspectRatio: z.enum(['1:1', '4:5', '9:16']),
+  aspectRatio: z.enum(["1:1", "4:5", "9:16"]),
 });
 
 export type GenerationTask = z.infer<typeof generationTaskSchema>;

@@ -3,10 +3,7 @@ import {
   generateAdCreativesInputSchema,
   workflowOutputSchema,
 } from "../types/ad-creative-types";
-import {
-  workflowStateSchema,
-  createInitialState,
-} from "../types/workflow-state-types";
+import { workflowStateSchema } from "../types/workflow-state-types";
 import {
   processAssetsStep,
   analyzeProductStep,
@@ -33,9 +30,9 @@ Generates professional ad creatives from product information using AI-powered te
 Minimal config:
 {
   "productTitle": "Your Product",
-  "productDescription": "Amazing product description",
-  "logo": "path/to/logo.png",
-  "productImages": ["path/to/product.jpg"],
+  "productDescription": "Detailed multi-paragraph product description highlighting key features, benefits, and unique selling points. You can include multiple paragraphs to provide comprehensive information about your product.",
+  "logo": "https://example.com/logo.png",
+  "productImages": ["https://example.com/product1.jpg", "https://example.com/product2.jpg"],
   "templateSelectionMode": "ai",
   "creativesPerTemplate": 1
 }
@@ -44,10 +41,11 @@ Minimal config:
 • "ai": AI picks best templates (set aiSelectTemplateCount)
 • "manual": You choose (set templateIds: [1, 11, 21])
 
-📊 Input formats supported:
-• File paths: "src/mastra/assets/image.jpg"
-• Base64: { type: "base64", value: "..." }
-• URLs: { type: "url", value: "https://..." }
+📸 IMAGE REQUIREMENTS:
+• All images must be publicly accessible URLs
+• Supported formats: PNG, JPG, WEBP, GIF, SVG
+• Logo: Single URL to your brand logo
+• Product Images: 1-10 URLs to product photos
 `,
 })
   .then(processAssetsStep)
@@ -59,5 +57,4 @@ Minimal config:
 
 generateAdCreativesWorkflow.commit();
 
-// Export the workflow and state helper
-export { generateAdCreativesWorkflow as default, createInitialState };
+export { generateAdCreativesWorkflow as default };

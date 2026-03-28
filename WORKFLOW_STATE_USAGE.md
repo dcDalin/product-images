@@ -56,13 +56,15 @@ The workflow state includes:
 
 ### Basic Usage
 
+State is automatically initialized from the schema defaults, so you don't need to provide `initialState`:
+
 ```typescript
-import { generateAdCreativesWorkflow, createInitialState } from './workflows/generate-ad-creatives-workflow'
+import { generateAdCreativesWorkflow } from './workflows/generate-ad-creatives-workflow'
 
 // Create a workflow run
 const run = await generateAdCreativesWorkflow.createRun()
 
-// Start with initial state
+// Start the workflow - state is auto-initialized
 const result = await run.start({
   inputData: {
     productTitle: "EcoBottle Pro",
@@ -71,12 +73,19 @@ const result = await run.start({
     productImages: ["path/to/product.jpg"],
     templateSelectionMode: "ai",
     creativesPerTemplate: 2
-  },
-  initialState: createInitialState()
+  }
 })
 
 console.log('Workflow completed:', result)
 ```
+
+The workflow state schema has defaults for all fields, so Mastra automatically initializes:
+- `progressLog: []`
+- `currentStep: "initialization"`
+- `totalCreativesGenerated: 0`
+- `totalAssets: { logoCount: 0, productImageCount: 0 }`
+- `warnings: []`
+- `timings: {}`
 
 ### Accessing State During Execution
 
