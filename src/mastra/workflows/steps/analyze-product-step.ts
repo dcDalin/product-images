@@ -56,7 +56,7 @@ export const analyzeProductStep = createStep({
     await setState({
       ...state,
       currentStep: "analyze-product",
-      progressLog: [...state.progressLog, "Started AI product analysis"],
+      progressLog: [...(state.progressLog || []), "Started AI product analysis"],
     });
 
     const agent = mastra?.getAgent("productAnalyzerAgent");
@@ -82,14 +82,50 @@ TASK:
 
 Return your analysis in structured format with all required fields.`;
 
-    const response = await agent.generate(prompt, {
-      structuredOutput: {
-        schema: productAnalysisSchema,
-      },
-    });
+    const enhancedPrompt = `${prompt}
 
-    if (!response.object) {
-      throw new Error("Failed to get structured analysis from agent");
+IMPORTANT: Return your response as a valid JSON object matching this exact schema:
+{
+  "keyFeatures": ["array of strings"],
+  "targetAudience": "string",
+  "brandTone": "professional|playful|luxury|minimal|bold|friendly",
+  "visualStyle": "string",
+  "keyMessages": ["array of strings"],
+  "recommendedTemplates": [
+    {
+      "templateId": number,
+      "templateName": "string",
+      "reasoning": "string",
+      "priority": "high|medium|low"
+    }
+  ],
+  "brandAttributes": {
+    "primaryColor": "string",
+    "secondaryColor": "string",
+    "tone": "string"
+  }
+}`;
+
+    const response = await agent.generate(enhancedPrompt);
+
+    if (!response.text) {
+      throw new Error("Failed to get analysis from agent");
+    }
+
+    // Parse the JSON response
+    let analysisObject: z.infer<typeof productAnalysisSchema>;
+    try {
+      // Extract JSON from markdown code blocks if present
+      const jsonMatch = response.text.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+      const jsonText = jsonMatch ? jsonMatch[1] : response.text;
+      const parsedJson: unknown = JSON.parse(jsonText);
+
+      // Validate with schema
+      analysisObject = productAnalysisSchema.parse(parsedJson);
+    } catch (error) {
+      console.error("Failed to parse agent response:", error);
+      console.error("Response text:", response.text);
+      throw new Error(`Failed to parse structured analysis from agent: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
     // Update state with timing and completion info
@@ -97,18 +133,18 @@ Return your analysis in structured format with all required fields.`;
     await setState({
       ...state,
       timings: {
-        ...state.timings,
+        ...(state.timings || {}),
         analyzeProduct: analysisTime,
       },
       progressLog: [
-        ...state.progressLog,
-        `AI analysis complete: Recommended ${response.object.recommendedTemplates.length} templates in ${analysisTime}ms`,
+        ...(state.progressLog || []),
+        `AI analysis complete: Recommended ${analysisObject.recommendedTemplates.length} templates in ${analysisTime}ms`,
       ],
     });
 
     return {
       ...inputData,
-      analysis: response.object,
+      analysis: analysisObject,
     };
   },
 });

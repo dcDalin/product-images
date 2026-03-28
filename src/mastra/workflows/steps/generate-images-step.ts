@@ -33,7 +33,10 @@ export const generateImagesStep = createStep({
     await setState({
       ...state,
       currentStep: "generate-images",
-      progressLog: [...state.progressLog, `Starting image generation for ${inputData.customizedPrompts.length} creatives`],
+      progressLog: [
+        ...(state.progressLog || []),
+        `Starting image generation for ${inputData.customizedPrompts.length} creatives`,
+      ],
     });
 
     const { originalInput, logo, productImages, customizedPrompts } = inputData;
@@ -42,10 +45,17 @@ export const generateImagesStep = createStep({
     // Prepare reference images
     const referenceImages = [
       { data: logo.data, type: "logo" as const },
-      ...productImages.map((img: { data: string; mimeType: string; originalSource: string; filename: string }) => ({
-        data: img.data,
-        type: "product" as const,
-      })),
+      ...productImages.map(
+        (img: {
+          data: string;
+          mimeType: string;
+          originalSource: string;
+          filename: string;
+        }) => ({
+          data: img.data,
+          type: "product" as const,
+        }),
+      ),
     ];
 
     // Generate images (could be parallelized with Promise.all for faster generation)
@@ -57,11 +67,13 @@ export const generateImagesStep = createStep({
           model: originalInput.imageGenerationModel,
           referenceImages,
         },
-        { requestContext, mastra }
+        { requestContext, mastra },
       );
 
-      if (!('imageData' in result)) {
-        throw new Error(`Failed to generate image for template ${promptConfig.templateId}`);
+      if (!("imageData" in result)) {
+        throw new Error(
+          `Failed to generate image for template ${promptConfig.templateId}`,
+        );
       }
 
       const { getCreativeForPrompt } =

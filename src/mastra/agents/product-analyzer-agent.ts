@@ -67,7 +67,7 @@ RECOMMENDATIONS:
 
 Be specific in your reasoning - explain WHY each template fits this particular product.`,
 
-  model: 'openai/gpt-5.4',
+  model: 'openai/gpt-4o',
 
   tools: {
     listTemplates: listTemplatesTool,

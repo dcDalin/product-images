@@ -62,7 +62,10 @@ export const customizePromptsStep = createStep({
     await setState({
       ...state,
       currentStep: "customize-prompts",
-      progressLog: [...state.progressLog, "Customizing prompts with product details"],
+      progressLog: [
+        ...(state.progressLog || []),
+        "Customizing prompts with product details",
+      ],
     });
 
     const { originalInput, analysis, tasks } = inputData;
@@ -72,10 +75,10 @@ export const customizePromptsStep = createStep({
       // Get template prompt text
       const templateInfo = await lookupTemplateTool.execute!(
         { templateId: task.templateId },
-        { requestContext, mastra }
+        { requestContext, mastra },
       );
 
-      if (!('promptText' in templateInfo)) {
+      if (!("promptText" in templateInfo)) {
         throw new Error(`Failed to lookup template ${task.templateId}`);
       }
 
@@ -127,7 +130,7 @@ export const customizePromptsStep = createStep({
         customizePrompts: customizeTime,
       },
       progressLog: [
-        ...state.progressLog,
+        ...(state.progressLog || []),
         `Customized ${customizedPrompts.length} prompts in ${customizeTime}ms`,
       ],
     });
